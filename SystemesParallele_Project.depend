@@ -1,0 +1,37 @@
+# depslib dependency file v1.0
+1289229557 source:c:\documents and settings\courbin\mes documents\thèse\workspace\systemesparallele_project\src\labelrosenfeld.cpp
+	"LabelRosenfeld.hpp"
+
+1289229582 c:\documents and settings\courbin\mes documents\thèse\workspace\systemesparallele_project\include\labelrosenfeld.hpp
+	"Region32.hpp"
+	<iostream>
+	<stdint.h>
+	<vector>
+
+1289230892 c:\documents and settings\courbin\mes documents\thèse\workspace\systemesparallele_project\include\region32.hpp
+	<stdint.h>
+	<vector>
+	<iostream>
+	<stdint.h>
+
+1289229671 source:c:\documents and settings\courbin\mes documents\thèse\workspace\systemesparallele_project\src\main.cpp
+	"main.hpp"
+
+1289230989 c:\documents and settings\courbin\mes documents\thèse\workspace\systemesparallele_project\include\main.hpp
+	"Region32.hpp"
+	"LabelRosenfeld.hpp"
+	"ImageEtiquette.hpp"
+	<omp.h>
+	<stdlib.h>
+	<stdio.h>
+	<sys/time.h>
+	<iomanip>
+
+1246345926 c:\documents and settings\courbin\mes documents\thèse\workspace\systemesparallele_project\include\imageetiquette.hpp
+	<string.h>
+	<iostream>
+	<stdlib.h>
+
+1245934038 source:c:\documents and settings\courbin\mes documents\thèse\workspace\systemesparallele_project\src\imageetiquette.cpp
+	"ImageEtiquette.hpp"
+
