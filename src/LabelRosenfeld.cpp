@@ -10,15 +10,16 @@
 ************************/
 
 //TODO: Deplace dans le hpp
-typedef struct thread_data{
-   Region32 region;
-}thread_data;
 
+//
+ void* labeliseThread(void* td);
 
-//TODO: Deplace dans le hpp
-void* labeliseThread(void* td);
+ typedef struct thread_data{
+    Region32 region;
+    LabelRosenfeld* lr;
+ }thread_data;
 
-
+ void* labeliseThreadLauncher(void*);
 
 /* Constructeur par defaut */
 LabelRosenfeld::LabelRosenfeld() {
@@ -458,20 +459,28 @@ void LabelRosenfeld::labeliseParallele4C(Region32& region32) {
   //Initialisation du tableau de threads
   pthread_t* threads = (pthread_t*) malloc(NbrThreads*sizeof(pthread_t));
 
-
-
   //Launching...
   int rc; //Return code
   int thr_counter;
+  LabelRosenfeld lr;
   for ( thr_counter = 0; thr_counter < NbrThreads; thr_counter++) {
 
       threadDataArray[thr_counter].region = region32.Regions.at(thr_counter);
+      threadDataArray[thr_counter].lr = &lr;
 
       //Go! Go! Go!
-      rc = pthread_create(&threads[thr_counter], NULL, labeliseThread,
+      rc = pthread_create(&threads[thr_counter], NULL, labeliseThreadLauncher,
         (void *) &threadDataArray[thr_counter]);
-
+        if(rc){
+          cout << "SYSTEM FAILURE, WINDOWS.DLL NOT FOUND" << endl;
+        }
   }
+
+
+  //Wait for the threads to be done
+
+
+
 
 }
 
@@ -484,12 +493,35 @@ void LabelRosenfeld::labeliseParallele8C(Region32& region32) {
 }
 
 
+void LabelRosenfeld::labeliseThreadFunction(Region32 myregion, void* md){
 
-void* labeliseThread(void* td){
+  thread_data* mydata = (thread_data*) md;
 
+  myregion.ne = 0;
+  int largeur 	= 	myregion.j1-myregion.j0;
+  //On labelise la première ligne
+  myregion.ne = mydata->lr->line0Labeling4C(myregion.X, myregion.i0, myregion.E, myregion.T, largeur, myregion.ne);
+
+  //On labelise toutes les autres lignes
+  int i;
+  for (i=myregion.i0+1; i<myregion.i1; i++) {
+      myregion.ne = mydata->lr->lineLabeling4C(myregion.X, i, myregion.E, myregion.T, largeur, myregion.ne);
+  }
+
+}
+
+void* labeliseThreadLauncher(void* td){
+
+
+  //Recupération des datas
   thread_data* mydata = (thread_data*) td;
+  Region32 myregion = mydata->region;
+  /* Premier etiquetage */
 
-  cout << "Je suis le thread numero " << mydata->region.i0;
+
+  ((LabelRosenfeld *)mydata->lr)->labeliseThreadFunction(myregion, td);
+
+
 
 
 }

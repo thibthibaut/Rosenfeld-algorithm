@@ -8,6 +8,8 @@
 #include <vector>
 using namespace std;
 
+
+
 class LabelRosenfeld {
 protected :
 
@@ -43,9 +45,12 @@ public :
     void labeliseSequetiel4C(Region32& region32);
     void labeliseSequetiel8C(Region32& region32);
 
-    /* Labelise en parallèle*/
+    /* Labelise en parallï¿½le*/
     void labeliseParallele4C(Region32& region32);
     void labeliseParallele8C(Region32& region32);
+
+    /* Fonctions de thread */
+   void labeliseThreadFunction(Region32, void*);
 
 };
 
