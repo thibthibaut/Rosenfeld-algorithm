@@ -1,4 +1,5 @@
 #include "LabelRosenfeld.hpp"
+#include <pthread.h>
 
 /**********************
 **        e2         **
@@ -7,6 +8,16 @@
 **                   **
 **         ?         **
 ************************/
+
+//TODO: Deplace dans le hpp
+typedef struct thread_data{
+   Region32 region;
+}thread_data;
+
+
+//TODO: Deplace dans le hpp
+void* labeliseThread(void* td);
+
 
 
 /* Constructeur par defaut */
@@ -25,6 +36,8 @@ uint32_t LabelRosenfeld::FindRoot(uint32_t* T, uint32_t i) {
     }
     return r;
 }
+
+
 void LabelRosenfeld::SetRoot(uint32_t* T, uint32_t i, uint32_t r) {
     uint32_t j;
 
@@ -423,9 +436,42 @@ void LabelRosenfeld::labeliseSequetiel8C(Region32& region32) {
  */
 void LabelRosenfeld::labeliseParallele4C(Region32& region32) {
 
+  /* Declaration des variables */
+  int i;
+  uint32_t ne;
+
+  int i0 			= 	region32.i0;
+  int i1 			= 	region32.i1;
+  int j0 			= 	region32.j0;
+  int j1 			= 	region32.j1;
+  int largeur 	= 	j1-j0;
+
+  /* Netoyage des précédents traitements */
+  region32.cleanRegions32();
+
+  // On va lancer un thread par région
+  int NbrThreads = region32.Regions.size();
+
+  //Initialisation du tableau de thread_data
+  thread_data* threadDataArray = (thread_data*) malloc(NbrThreads*sizeof(thread_data));
+
+  //Initialisation du tableau de threads
+  pthread_t* threads = (pthread_t*) malloc(NbrThreads*sizeof(pthread_t));
 
 
 
+  //Launching...
+  int rc; //Return code
+  int thr_counter;
+  for ( thr_counter = 0; thr_counter < NbrThreads; thr_counter++) {
+
+      threadDataArray[thr_counter].region = region32.Regions.at(thr_counter);
+
+      //Go! Go! Go!
+      rc = pthread_create(&threads[thr_counter], NULL, labeliseThread,
+        (void *) &threadDataArray[thr_counter]);
+
+  }
 
 }
 
@@ -434,5 +480,16 @@ void LabelRosenfeld::labeliseParallele4C(Region32& region32) {
  * TODO: WRITE THE CODE !!!!
  */
 void LabelRosenfeld::labeliseParallele8C(Region32& region32) {
+
+}
+
+
+
+void* labeliseThread(void* td){
+
+  thread_data* mydata = (thread_data*) td;
+
+  cout << "Je suis le thread numero " << mydata->region.i0;
+
 
 }

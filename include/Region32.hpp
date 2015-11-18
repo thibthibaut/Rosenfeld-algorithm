@@ -6,7 +6,7 @@
 #include <iostream>
 using namespace std;
 
-#define NEMAX 200000    // Nombre max d'étiquettes gérées
+#define NEMAX 200000    // Nombre max d'ï¿½tiquettes gï¿½rï¿½es
 
 class  Region32 {
 private :
@@ -22,7 +22,7 @@ public :
     int i0, i1, j0, j1;							// intervalle de valeur RoI
 
     uint32_t   ne;         						// nb d'etiquettes courante
-	uint32_t   neFinal;							// nb d'etiquettes finale
+	   uint32_t   neFinal;							// nb d'etiquettes finale
 
     /* Gestion des bandes paralleles */
     vector<Region32> Regions; 					        // Vecteur de regions la liste des sous-regions

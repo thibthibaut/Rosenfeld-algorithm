@@ -4,7 +4,7 @@
 
 # -- Lile list ----------
 FILE =  Region32.cpp ImageEtiquette.cpp LabelRosenfeld.cpp main.cpp
-C_OPTION = #-fopenmp ou -pthreads etc etc
+C_OPTION = -lpthread
 
 # -- Paths ----------
 SRC_PATH = src

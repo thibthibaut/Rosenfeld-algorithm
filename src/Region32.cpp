@@ -40,7 +40,7 @@ Region32::Region32(unsigned char **X, uint32_t **E, int i0, int i1, int j0, int 
     /* Pour la gestion des bandes parallèles */
     if (nbThreads >= 1) {
         int h = i1-i0; 													// Hauteur de l'image
-        int p, i0p = 0, i1p = 0, hp; 										// Identificateurs des debut/fin de chaque partie et hauteur de chaque partie
+        int p, i0p = 0, i1p = 0, hp; 						// Identificateurs des debut/fin de chaque partie et hauteur de chaque partie
         Region32* temp;
 
         /* Calcul de la hauteur de chaque bande */
@@ -59,9 +59,9 @@ Region32::Region32(unsigned char **X, uint32_t **E, int i0, int i1, int j0, int 
                 i1p = i0p + hp;
             }
 
-            temp 						=	new Region32(X,E,i0p,i1p,j0,j1,0);	// Creation de la region en lui indiquant qu'elle est seul (nbThreads = 0)
+            temp 	=	new Region32(X,E,i0p,i1p,j0,j1,0);	// Creation de la region en lui indiquant qu'elle est seul (nbThreads = 0)
             this->Regions.push_back(*temp);										// Ajout de cette région à la liste des régions du maître
-            this->Regions[p].p			=	p;									// On indique à la sous-région son numéro
+            this->Regions[p].p	=	p;									// On indique à la sous-région son numéro
         }
     }
 }
