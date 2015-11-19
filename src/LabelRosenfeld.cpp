@@ -473,12 +473,15 @@ void LabelRosenfeld::labeliseParallele4C(Region32& region32) {
       rc = pthread_create(&threads[thr_counter], NULL, labeliseThreadLauncher,
         (void *) &threadDataArray[thr_counter]);
         if(rc){
-          cout << "SYSTEM FAILURE, WINDOWS.DLL NOT FOUND" << endl;
+          cout << "Problem launching threads" << endl;
         }
   }
 
 
   //Wait for the threads to be done
+  for ( thr_counter = 0; thr_counter < NbrThreads; thr_counter++) {
+    pthread_join(threads[thr_counter], NULL);
+  }
 
 
 
@@ -511,8 +514,11 @@ void LabelRosenfeld::labeliseThreadFunction(void* md){
   }
 
   //Resolution de la table d'équivalence partielle
-    //region32.neFinal = solvePackTable(region32.T, ne);
+  myregion->neFinal = solvePackTable(myregion->T, myregion->ne);
 
+
+  //DEBUG: REPAINT
+  updateLabel(myregion->E, myregion->i0, myregion->i1, myregion->j0, myregion->j1, myregion->T);
 
 
 
