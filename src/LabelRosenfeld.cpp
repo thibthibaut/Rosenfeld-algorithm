@@ -15,7 +15,7 @@
  void* labeliseThread(void* td);
 
  typedef struct thread_data{
-    Region32 region;
+    Region32* region;
     LabelRosenfeld* lr;
  }thread_data;
 
@@ -462,11 +462,12 @@ void LabelRosenfeld::labeliseParallele4C(Region32& region32) {
   //Launching...
   int rc; //Return code
   int thr_counter;
-  LabelRosenfeld lr;
+  LabelRosenfeld* lr_array = (LabelRosenfeld*) malloc(NbrThreads*sizeof(LabelRosenfeld));
+
   for ( thr_counter = 0; thr_counter < NbrThreads; thr_counter++) {
 
-      threadDataArray[thr_counter].region = region32.Regions.at(thr_counter);
-      threadDataArray[thr_counter].lr = &lr;
+      threadDataArray[thr_counter].region = &region32.Regions.at(thr_counter);
+      threadDataArray[thr_counter].lr = &lr_array[thr_counter];
 
       //Go! Go! Go!
       rc = pthread_create(&threads[thr_counter], NULL, labeliseThreadLauncher,
@@ -493,20 +494,27 @@ void LabelRosenfeld::labeliseParallele8C(Region32& region32) {
 }
 
 
-void LabelRosenfeld::labeliseThreadFunction(Region32 myregion, void* md){
+void LabelRosenfeld::labeliseThreadFunction(void* md){
 
-  thread_data* mydata = (thread_data*) md;
+  thread_data* mydata =(thread_data*) md;
+  Region32* myregion = mydata->region;
 
-  myregion.ne = 0;
-  int largeur 	= 	myregion.j1-myregion.j0;
+  myregion->ne = 0;
+  int largeur 	= 	myregion->j1 - myregion->j0;
   //On labelise la première ligne
-  myregion.ne = mydata->lr->line0Labeling4C(myregion.X, myregion.i0, myregion.E, myregion.T, largeur, myregion.ne);
+  myregion->ne = line0Labeling4C(myregion->X, myregion->i0, myregion->E, myregion->T, largeur, myregion->ne);
 
   //On labelise toutes les autres lignes
   int i;
-  for (i=myregion.i0+1; i<myregion.i1; i++) {
-      myregion.ne = mydata->lr->lineLabeling4C(myregion.X, i, myregion.E, myregion.T, largeur, myregion.ne);
+  for (i=myregion->i0+1; i<myregion->i1; i++) {
+      myregion->ne = lineLabeling4C(myregion->X, i, myregion->E, myregion->T, largeur, myregion->ne);
   }
+
+  //Resolution de la table d'équivalence partielle
+    //region32.neFinal = solvePackTable(region32.T, ne);
+
+
+
 
 }
 
@@ -515,13 +523,8 @@ void* labeliseThreadLauncher(void* td){
 
   //Recupération des datas
   thread_data* mydata = (thread_data*) td;
-  Region32 myregion = mydata->region;
-  /* Premier etiquetage */
 
-
-  ((LabelRosenfeld *)mydata->lr)->labeliseThreadFunction(myregion, td);
-
-
+  ((LabelRosenfeld *)mydata->lr)->labeliseThreadFunction( td );
 
 
 }

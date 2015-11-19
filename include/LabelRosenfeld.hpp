@@ -9,7 +9,6 @@
 using namespace std;
 
 
-
 class LabelRosenfeld {
 protected :
 
@@ -50,7 +49,7 @@ public :
     void labeliseParallele8C(Region32& region32);
 
     /* Fonctions de thread */
-   void labeliseThreadFunction(Region32, void*);
+   void labeliseThreadFunction(void*);
 
 };
 
