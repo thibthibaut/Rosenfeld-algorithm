@@ -446,6 +446,7 @@ void LabelRosenfeld::labeliseParallele4C(Region32& region32) {
   int j0 			= 	region32.j0;
   int j1 			= 	region32.j1;
   int largeur 	= 	j1-j0;
+  int hauteur 	= 	i1-i0;
 
   /* Netoyage des précédents traitements */
   region32.cleanRegions32();
@@ -472,9 +473,8 @@ void LabelRosenfeld::labeliseParallele4C(Region32& region32) {
       //Go! Go! Go!
       rc = pthread_create(&threads[thr_counter], NULL, labeliseThreadLauncher,
         (void *) &threadDataArray[thr_counter]);
-        if(rc){
-          cout << "Problem launching threads" << endl;
-        }
+        if(rc) cout << "Problem launching threads" << endl;
+
   }
 
 
@@ -488,90 +488,80 @@ void LabelRosenfeld::labeliseParallele4C(Region32& region32) {
   //C'est un solvePackTable + updateLabel global
 
 //Création d'une nouvelle table d'équivalence globale
+
+
+
+
 uint32_t global_size = 0;
 for ( thr_counter = 0; thr_counter < NbrThreads; thr_counter++) {
   global_size += region32.Regions.at(thr_counter).ne;
+
 }
-uint32_t* globalT = (uint32_t*) malloc(global_size*sizeof(uint32_t));
 
 int counter;
 int partialcounter = 0;
 int currentThread = 0;
-int shift = 0; //Decalage
+int offset = 0; //Decalage
 for ( counter = 0; counter < global_size; counter++) {
 
-  if(counter ==  shift + region32.Regions.at(currentThread).ne){
-    shift = region32.Regions.at(currentThread).ne;
+
+  if(counter == offset + region32.Regions.at(currentThread).ne){
+    offset += region32.Regions.at(currentThread).ne;
     currentThread++;
     partialcounter = 0;
     cout <<  "Changing...  " << endl;
+    cout << endl << "*****" << currentThread << "*****" << endl;
   }
 
-  globalT[counter] = shift + region32.Regions.at(currentThread).T[partialcounter];
-
-
+  region32.T[counter] = offset + region32.Regions.at(currentThread).T[partialcounter];
   partialcounter++;
-  cout << counter << " -> " << globalT[counter] << endl;
+  cout << counter << " -> " << region32.T[counter] << endl;
+
+
+
+
 
 }
 
 
-solvePackTable(globalT, global_size);
+solvePackTable(region32.T, global_size);
 
 for ( counter = 0; counter < global_size; counter++) {
-  cout << counter << " -> " << globalT[counter] << endl;
+  cout << counter << " -> " << region32.T[counter] << endl;
 
 }
 
 
   cout << "******************** DEBUG *********" << endl;
 //Creation d'un nouveau tableau de label global
-Region32* myregion = &region32.Regions.at(1);
-int ii, jj;
-// for (ii=myregion->i0+1; ii<myregion->i1; ii++) {
-//
-//     for(jj=0; jj<largeur; jj++){
-//
-//       cout << "ligne " << ii << " colonne " << jj << " : " << myregion->E[ii][jj] << endl;
-//
-//     }
-//
-//     //myregion->ne = lineLabeling4C(myregion->X, i, myregion->E, myregion->T, largeur, myregion->ne);
-// }
+int row, col;
+ currentThread = 0;
+ offset = 0;
+for (row = 0; row < hauteur; row++) {
 
+  for(col = 0; col < largeur; col++){
 
-int localcounteri = 0;
-int localcounterj = 0;
-currentThread = 0;
-shift = 0;;
-for (ii=region32.i0+1; ii<region32.i1; ii++) {
-
-    for(jj=0; jj<largeur; jj++){
-
-      if(ii==region32.Regions.at(currentThread).i1 && jj==region32.Regions.at(currentThread).j1){
-        shift = region32.Regions.at(currentThread).ne;
-        currentThread++;
-
-      }
-
-      region32.E[ii][jj] = shift + region32.Regions.at(currentThread).E[ii][jj];
-
-    //  cout << "ligne " << ii << " colonne " << jj << " : " << region32.E[ii][jj] << endl;
-
-      //localcounterj++;
+    if( region32.E[row][col] == offset + region32.Regions.at(currentThread).ne ){
+      offset += region32.Regions.at(currentThread).ne;
+      currentThread++;
     }
 
-    //myregion->ne = lineLabeling4C(myregion->X, i, myregion->E, myregion->T, largeur, myregion->ne);
+    region32.E[row][col] = region32.E[row][col] == 0 ? 0 : offset +region32.E[row][col];
+    //  cout << region32.E[row][col] << " ";
+  }
+
+    cout << endl << "*****" << currentThread << "*****" << endl;
 }
 
-updateLabel(region32.E, i0, i1, j0, j1, globalT);
 
+
+updateLabel(region32.E, i0, i1, j0, j1, region32.T);
 
 }
 
-/**
+/*************************
  * Labelise en parallele
- * TODO: WRITE THE CODE !!!!
+ *
  */
 void LabelRosenfeld::labeliseParallele8C(Region32& region32) {
 
@@ -599,6 +589,7 @@ void LabelRosenfeld::labeliseThreadFunction(void* md){
 
   //Mise à jour de la table d'étiquettes partielle
   //updateLabel(myregion->E, myregion->i0, myregion->i1, myregion->j0, myregion->j1, myregion->T);
+
 
 
 
