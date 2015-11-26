@@ -483,7 +483,88 @@ void LabelRosenfeld::labeliseParallele4C(Region32& region32) {
     pthread_join(threads[thr_counter], NULL);
   }
 
+  //Il faut maintenant résoudre les problèmes de connexité
+  //aux jointures entre les régions de threads
+  //C'est un solvePackTable + updateLabel global
 
+//Création d'une nouvelle table d'équivalence globale
+uint32_t global_size = 0;
+for ( thr_counter = 0; thr_counter < NbrThreads; thr_counter++) {
+  global_size += region32.Regions.at(thr_counter).ne;
+}
+uint32_t* globalT = (uint32_t*) malloc(global_size*sizeof(uint32_t));
+
+int counter;
+int partialcounter = 0;
+int currentThread = 0;
+int shift = 0; //Decalage
+for ( counter = 0; counter < global_size; counter++) {
+
+  if(counter ==  shift + region32.Regions.at(currentThread).ne){
+    shift = region32.Regions.at(currentThread).ne;
+    currentThread++;
+    partialcounter = 0;
+    cout <<  "Changing...  " << endl;
+  }
+
+  globalT[counter] = shift + region32.Regions.at(currentThread).T[partialcounter];
+
+
+  partialcounter++;
+  cout << counter << " -> " << globalT[counter] << endl;
+
+}
+
+
+solvePackTable(globalT, global_size);
+
+for ( counter = 0; counter < global_size; counter++) {
+  cout << counter << " -> " << globalT[counter] << endl;
+
+}
+
+
+  cout << "******************** DEBUG *********" << endl;
+//Creation d'un nouveau tableau de label global
+Region32* myregion = &region32.Regions.at(1);
+int ii, jj;
+// for (ii=myregion->i0+1; ii<myregion->i1; ii++) {
+//
+//     for(jj=0; jj<largeur; jj++){
+//
+//       cout << "ligne " << ii << " colonne " << jj << " : " << myregion->E[ii][jj] << endl;
+//
+//     }
+//
+//     //myregion->ne = lineLabeling4C(myregion->X, i, myregion->E, myregion->T, largeur, myregion->ne);
+// }
+
+
+int localcounteri = 0;
+int localcounterj = 0;
+currentThread = 0;
+shift = 0;;
+for (ii=region32.i0+1; ii<region32.i1; ii++) {
+
+    for(jj=0; jj<largeur; jj++){
+
+      if(ii==region32.Regions.at(currentThread).i1 && jj==region32.Regions.at(currentThread).j1){
+        shift = region32.Regions.at(currentThread).ne;
+        currentThread++;
+
+      }
+
+      region32.E[ii][jj] = shift + region32.Regions.at(currentThread).E[ii][jj];
+
+    //  cout << "ligne " << ii << " colonne " << jj << " : " << region32.E[ii][jj] << endl;
+
+      //localcounterj++;
+    }
+
+    //myregion->ne = lineLabeling4C(myregion->X, i, myregion->E, myregion->T, largeur, myregion->ne);
+}
+
+updateLabel(region32.E, i0, i1, j0, j1, globalT);
 
 
 }
@@ -514,11 +595,10 @@ void LabelRosenfeld::labeliseThreadFunction(void* md){
   }
 
   //Resolution de la table d'équivalence partielle
-  myregion->neFinal = solvePackTable(myregion->T, myregion->ne);
+  //myregion->neFinal = solvePackTable(myregion->T, myregion->ne);
 
-
-  //DEBUG: REPAINT
-  updateLabel(myregion->E, myregion->i0, myregion->i1, myregion->j0, myregion->j1, myregion->T);
+  //Mise à jour de la table d'étiquettes partielle
+  //updateLabel(myregion->E, myregion->i0, myregion->i1, myregion->j0, myregion->j1, myregion->T);
 
 
 
