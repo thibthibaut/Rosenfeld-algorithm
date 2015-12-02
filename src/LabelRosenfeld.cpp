@@ -1,6 +1,7 @@
 #include "LabelRosenfeld.hpp"
 #include <pthread.h>
 
+#define OFFSET 0
 /**********************
 **        e2         **
 **                   **
@@ -15,6 +16,7 @@
  void* labeliseThread(void* td);
 
  typedef struct thread_data{
+    unsigned char th_nbr;
     Region32* region;
     LabelRosenfeld* lr;
  }thread_data;
@@ -467,6 +469,7 @@ void LabelRosenfeld::labeliseParallele4C(Region32& region32) {
 
   for ( thr_counter = 0; thr_counter < NbrThreads; thr_counter++) {
 
+      threadDataArray[thr_counter].th_nbr = thr_counter;
       threadDataArray[thr_counter].region = &region32.Regions.at(thr_counter);
       threadDataArray[thr_counter].lr = &lr_array[thr_counter];
 
@@ -517,23 +520,48 @@ for ( counter = 0; counter < global_size; counter++) {
   partialcounter++;
   cout << counter << " -> " << region32.T[counter] << endl;
 
-
-
-
-
 }
+
+/* Passage aux limites */
+for(int i=1; i<NbrThreads; i++){
+
+  Region32 cRegion = region32.Regions.at(i); //Current region
+  uint32_t ce; //Current label
+  uint32_t up;
+
+  for(int r = cRegion.j0; r<cRegion.j1; r++){
+  ce = region32.E[cRegion.i0][r];//Add offset to match with global pack table
+  if( ce ){ //If it's not black
+    //Look up!
+    up = region32.E[cRegion.i0-1][r];
+    if( up ){ //If up is not black
+      //We have an equivalency
+      region32.T[ ce + region32.Regions.at(i-1).ne ] = i == 1 ? up : up + region32.Regions.at(i-2).ne;
+    }
+  }
+}
+}
+
 
 
 solvePackTable(region32.T, global_size);
+int m = 0;
+//updateLabel(region32.E, i0, i1, j0, j1, region32.T);
 
-for ( counter = 0; counter < global_size; counter++) {
-  cout << counter << " -> " << region32.T[counter] << endl;
-
+Region32 cRegion = region32.Regions.at(0);
+int regioncount;
+for (int i=i0; i<i1; i++) {
+    for (int j=j0; j<j1; j++) {
+        if( i == cRegion.i0 ){
+          offset = cRegion.ne;
+          cRegion = region32.Regions.at(regioncount++);
+        }
+        region32.E[i][j] = region32.T[ region32.E[i][j] ]; //On va chercher dans la table d'équivalence la bonne valeur de l'étiquette
+    }
 }
 
 
-  cout << "******************** DEBUG *********" << endl;
-//Creation d'un nouveau tableau de label global
+/*Creation d'un nouveau tableau de label global
 int row, col;
  currentThread = 0;
  offset = 0;
@@ -541,21 +569,22 @@ for (row = 0; row < hauteur; row++) {
 
   for(col = 0; col < largeur; col++){
 
-    if( region32.E[row][col] == offset + region32.Regions.at(currentThread).ne ){
+    if( row  == region32.Regions.at(currentThread).i1  ){
       offset += region32.Regions.at(currentThread).ne;
       currentThread++;
+      cout << endl << "*****" << currentThread << "*****" << endl;
     }
 
     region32.E[row][col] = region32.E[row][col] == 0 ? 0 : offset +region32.E[row][col];
     //  cout << region32.E[row][col] << " ";
   }
 
-    cout << endl << "*****" << currentThread << "*****" << endl;
+
 }
 
 
 
-updateLabel(region32.E, i0, i1, j0, j1, region32.T);
+updateLabel(region32.E, i0, i1, j0, j1, region32.T);*/
 
 }
 
@@ -573,15 +602,17 @@ void LabelRosenfeld::labeliseThreadFunction(void* md){
   thread_data* mydata =(thread_data*) md;
   Region32* myregion = mydata->region;
 
+  unsigned char mynumber = mydata->th_nbr;
+
   myregion->ne = 0;
   int largeur 	= 	myregion->j1 - myregion->j0;
   //On labelise la première ligne
-  myregion->ne = line0Labeling4C(myregion->X, myregion->i0, myregion->E, myregion->T, largeur, myregion->ne);
+  myregion->ne = line0Labeling4C(myregion->X, myregion->i0, myregion->E, myregion->T, largeur, myregion->ne + mynumber*OFFSET);
 
   //On labelise toutes les autres lignes
   int i;
   for (i=myregion->i0+1; i<myregion->i1; i++) {
-      myregion->ne = lineLabeling4C(myregion->X, i, myregion->E, myregion->T, largeur, myregion->ne);
+      myregion->ne = lineLabeling4C(myregion->X, i, myregion->E, myregion->T, largeur, myregion->ne + mynumber*OFFSET);
   }
 
   //Resolution de la table d'équivalence partielle
